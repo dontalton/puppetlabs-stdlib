@@ -38,20 +38,49 @@ Puppet::Type.type(:file_line).provide(:ruby) do
     if match_count > 1
       raise Puppet::Error, "More than one line in file '#{resource[:path]}' matches pattern '#{resource[:match]}'"
     end
-    File.open(resource[:path], 'w') do |fh|
-      lines.each do |l|
-        fh.puts(regex.match(l) ? resource[:line] : l)
-      end
-
+    if [:match_location]
+      # find what line has the text and match it up to match_location
+      # if they are out of sync, delete it from the lines list, then re-add it
+      # at the specified location
       if (match_count == 0)
-        fh.puts(resource[:line])
+        line_counter = 0
+        File.open(resource[:path], 'w') do |fh|
+          lines.each do |l|
+            if line_counter == [:match_location]
+              fh.puts([:line])
+              fh.puts(l)
+            else
+              fh.puts(l)
+            end
+            line_counter += 1 
+          end
+        end
+      end 
+    else
+      File.open(resource[:path], 'w') do |fh|
+        lines.each do |l|
+          fh.puts(regex.match(l) ? resource[:line] : l)
+        end
+
+        if (match_count == 0)
+          fh.puts(resource[:line])
+        end
       end
     end
   end
 
   def handle_create_without_match
-    File.open(resource[:path], 'a') do |fh|
-      fh.puts resource[:line]
+    line_counter = 0
+    File.open(resource[:path], 'w') do |fh|
+      lines.each do |l|
+        if line_counter == [:match_location]
+          fh.puts([:line])
+          fh.puts(l)
+        else
+          fh.puts(l)
+        end
+        line_counter += 1
+      end
     end
   end
 

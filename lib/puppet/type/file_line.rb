@@ -37,10 +37,14 @@ Puppet::Type.newtype(:file_line) do
         'if a match is found, we replace that line rather than adding a new line.'
   end
 
+  newparam(:match_location) do
+    desc 'An option to choose which line in a file to look for a match'
+  end
+
   newparam(:line) do
     desc 'The line to be appended to the file located by the path parameter.'
   end
-
+  
   newparam(:path) do
     desc 'The file Puppet will ensure contains the line specified by the line parameter.'
     validate do |value|
